@@ -1,0 +1,11 @@
+{
+  "name": "split-and-move",
+  "main": "./lib/split-and-move",
+  "version": "0.0.0",
+  "description": "Helps you to split/move tabs into pane",
+  "repository": "https://github.com/msshnt/split-and-move",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  }
+}

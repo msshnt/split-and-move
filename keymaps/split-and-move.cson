@@ -1,0 +1,13 @@
+# Darwin
+'.platform-darwin':
+  'cmd-k right': 'split-and-move:split-right'
+  'cmd-k left' : 'split-and-move:split-left'
+  'cmd-k up'   : 'split-and-move:split-up'
+  'cmd-k down' : 'split-and-move:split-down'
+
+# Windows, Linux
+'.platform-win32, .platform-linux':
+  'ctrl-k right': 'split-and-move:split-right'
+  'ctrl-k left' : 'split-and-move:split-left'
+  'ctrl-k up'   : 'split-and-move:split-up'
+  'ctrl-k down' : 'split-and-move:split-down'
