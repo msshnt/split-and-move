@@ -12,7 +12,7 @@ module.exports =
       'split-and-move:split-down' : => @splitPane 'down'
 
   deactivate: ->
-    @subscriptions.dispose
+    @subscriptions.dispose()
 
   notify: ( message ) ->
     atom.notifications.addInfo message
