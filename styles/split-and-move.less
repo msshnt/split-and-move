@@ -1,0 +1,44 @@
+@charset 'utf-8';
+
+@import 'ui-variables';
+
+/**
+ * style: sam-panel
+ *
+ */
+sam-panel {
+  display: block;
+  
+  .title {
+    margin-bottom: 1em;
+    font-size: 120%;
+    color: @text-color-highlight;
+  }
+
+  .console {
+    &:empty {
+      display: none;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+/**
+ * style: sam-indicator
+ *
+ */
+sam-indicator {
+  padding: .5em .75em;
+  
+  .theme-atom-dark-ui & {
+    background-color: darken(@app-background-color, 10%);
+  }
+
+  &.invisible {
+    display: none;
+  }
+
+}
