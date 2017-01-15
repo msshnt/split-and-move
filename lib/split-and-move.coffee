@@ -1,18 +1,37 @@
 {CompositeDisposable} = require 'atom'
+SAMIndicatorManager = require './split-and-move-indicator-manager'
+{SAMPanel} = require './split-and-move-panel'
 
-module.exports =
+module.exports = SAM =
   subscriptions: null
+  config: require './split-and-move-config'
+  manager: null
+  panel: null
+
+  targetItem: null
+  targetPane: null
 
   activate: ->
     @subscriptions = new CompositeDisposable
+
     @subscriptions.add atom.commands.add 'atom-workspace',
       'split-and-move:split-right': => @splitPane 'right'
       'split-and-move:split-left' : => @splitPane 'left'
       'split-and-move:split-up'   : => @splitPane 'up'
       'split-and-move:split-down' : => @splitPane 'down'
+      'split-and-move:start-move' : => @startMove()
+
+    @indicatorManager = new SAMIndicatorManager()
+
+    @panel = new SAMPanel
+    @panel.onDidKeyPress @didKeyPress.bind( this )
+    @panel.onDidKeyUp @didKeyUp.bind( this )
+    @panel.onDidBlur @didBlur.bind( this )
 
   deactivate: ->
     @subscriptions.dispose()
+    @indicatorManager.destroy()
+    @indicatorManager = null
 
   notify: ( message ) ->
     atom.notifications.addInfo message
@@ -20,8 +39,14 @@ module.exports =
   splitPane: ( direction ) ->
     currentPane = atom.workspace.getActivePane()
     currentItem = currentPane.getActiveItem()
+    pendingItem = currentPane.getPendingItem()
     params =
       'copyActiveItem': true
+
+    if currentItem == pendingItem && atom.config.get( 'split-and-move.forcePendingItemToBeMoved' )
+      currentPane.clearPendingItem()
+      currentItem = currentPane.getActiveItem()
+
 
     switch direction
       when 'right' then currentPane.splitRight( params )
@@ -31,3 +56,58 @@ module.exports =
 
     if currentPane.getItems().length > 1
       currentPane.destroyItem( currentItem )
+
+  startMove: ->
+    if atom.workspace.getPanes().length < 2
+      return
+    else
+      @targetItem = atom.workspace.getActivePaneItem()
+      @panel.show()
+      if atom.config.get( 'split-and-move.showIndicatorsOnlyWhenMoving' )
+        @indicatorManager.toggleVisible true
+
+  didKeyPress: ( event ) ->
+    idx = parseInt event.key
+    if Number.isNaN( idx )
+      @panel.showError null, "Please input a number key."
+      return
+    panes = atom.workspace.getPanes()
+
+    if !panes[idx]
+      @panel.showError idx, "The selected pane doesn't exist in workspace."
+    else if idx == panes.indexOf( atom.workspace.getActivePane() )
+      @panel.showError idx, "The active tab already exists in the selected pane."
+    else
+      @moveTab panes[idx]
+
+  didKeyUp: ( event ) ->
+    if event.key == 'Escape'
+      @quitMove false
+
+  didBlur: ( event ) ->
+    @quitMove false
+
+  moveTab: ( pane ) ->
+    @targetPane = pane
+    currentPane = atom.workspace.getActivePane()
+    if atom.config.get( 'split-and-move.alwaysMoveItemIntoEndOfPane' )
+      idx = @targetPane.getItems().length
+      currentPane.moveItemToPane @targetItem, @targetPane, idx
+    else
+      currentPane.moveItemToPane @targetItem, @targetPane
+    @quitMove true
+
+  quitMove: ( @moved ) ->
+    @panel.hide()
+
+    if atom.config.get( 'split-and-move.showIndicatorsOnlyWhenMoving' )
+      @indicatorManager.toggleVisible false
+
+    if @moved
+      @targetPane.activateItem @targetItem
+      @targetPane.activate()
+      @targetItem = null
+      @targetPane = null
+      @moved = false
+    else
+      atom.workspace.getActivePane().activate()
