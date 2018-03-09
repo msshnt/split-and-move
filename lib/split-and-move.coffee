@@ -40,12 +40,13 @@ module.exports = SAM =
     currentPane = atom.workspace.getActivePane()
     currentItem = currentPane.getActiveItem()
     pendingItem = currentPane.getPendingItem()
+    isPending = currentItem == pendingItem
     params =
       'copyActiveItem': true
 
-    if currentItem == pendingItem && atom.config.get( 'split-and-move.forcePendingItemToBeMoved' )
+    if isPending and atom.config.get( 'split-and-move.forcePendingItemToBeMoved' )
       currentPane.clearPendingItem()
-      currentItem = currentPane.getActiveItem()
+      isPending = false
 
 
     switch direction
@@ -55,6 +56,8 @@ module.exports = SAM =
       when 'down'  then currentPane.splitDown( params )
 
     if currentPane.getItems().length > 1
+      if isPending
+        return
       currentPane.destroyItem( currentItem )
 
   startMove: ->
